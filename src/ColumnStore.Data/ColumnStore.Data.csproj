@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>ColumnStore.Data</RootNamespace>
+    <AssemblyName>ColumnStore.Data</AssemblyName>
+    <Description>Column-oriented, strongly typed, allocation-lean in-memory table. A near drop-in alternative to System.Data.DataTable.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>ColumnStore.Data</PackageId>
+    <IsPackable>true</IsPackable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>datatable;columnar;column-store;performance;memory;ado.net;in-memory;boxing;system.data</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- .NET Framework has no System.Data reference by default in an SDK-style project, and DataRowState,
+       DBNull and the event-argument types the compatibility surface mirrors all live there. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Data" />
+    <!-- The only package this library takes on any target, and only on this one. ChunkSizing.LohSafeRowCount<T>
+         needs the MANAGED size of T - what one element occupies in a T[] - which .NET Framework exposes nowhere
+         else: sizeof(T) is refused for an unconstrained generic, and Marshal.SizeOf reports unmanaged layout, which
+         is a different number. .NET 8 and .NET 10 have Unsafe.SizeOf in the runtime and take no dependency. -->
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ColumnStore.Data.Tests" />
+    <InternalsVisibleTo Include="ColumnStore.Data.SqlServer" />
+    <InternalsVisibleTo Include="ColumnStore.Data.Benchmarks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="readme.txt" />
+    <None Include="Storage\readme.txt" />
+  </ItemGroup>
+
+</Project>

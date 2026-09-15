@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+.vs/
+BenchmarkDotNet.Artifacts/
+TestResults/
+
+# NuGet packages produced by 'dotnet pack -o artifacts'
+artifacts/

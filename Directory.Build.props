@@ -1,0 +1,45 @@
+<Project>
+
+  <!-- Compilation settings, shared by every project in the repository. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Identity. Version is the single place to bump before packing. -->
+  <PropertyGroup>
+    <Authors>Nandika</Authors>
+    <Company>Nandika</Company>
+    <Product>ColumnStore.Data</Product>
+    <Version>1.0.0</Version>
+    <Copyright>Copyright (c) Nandika</Copyright>
+  </PropertyGroup>
+
+  <!-- NuGet packaging defaults. Only the two src projects set IsPackable true; tests and benchmarks opt out. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <PackageProjectUrl>https://github.com/Nandika/ColumnStore.Data</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Nandika/ColumnStore.Data</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <!-- CHOOSE A LICENCE BEFORE THE FIRST PUBLISH. Add a LICENSE file at the repository root and uncomment one of
+         these; without it NuGet marks the package as having no licence and consumers cannot tell what they may do
+         with it. Nothing else here is a placeholder - this line is left commented deliberately rather than guessed.
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    -->
+  </PropertyGroup>
+
+  <!-- Symbols and source stepping, so a consumer can debug into the package. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>
