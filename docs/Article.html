@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reimagining DataTable</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #F4F6F9;
+    --surface: #FFFFFF;
+    --ink: #10141A;
+    --muted: #59636F;
+    --faint: #8A94A0;
+    --rule: #DCE1E8;
+    --accent: #A65B0B;
+    --accent-soft: #F2E4D0;
+    --old: #7E8894;
+    --old-soft: #E2E7ED;
+    --code-bg: #EDF1F5;
+    --shadow: 0 1px 2px rgba(16,20,26,.05), 0 10px 28px -20px rgba(16,20,26,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0D1014;
+      --surface: #151A21;
+      --ink: #E7ECF2;
+      --muted: #9AA5B1;
+      --faint: #6B7682;
+      --rule: #252C35;
+      --accent: #E3A24A;
+      --accent-soft: #33261465;
+      --old: #79838F;
+      --old-soft: #222932;
+      --code-bg: #1B212A;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0D1014;
+    --surface: #151A21;
+    --ink: #E7ECF2;
+    --muted: #9AA5B1;
+    --faint: #6B7682;
+    --rule: #252C35;
+    --accent: #E3A24A;
+    --accent-soft: #33261465;
+    --old: #79838F;
+    --old-soft: #222932;
+    --code-bg: #1B212A;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 19px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 96px; }
+  .col { max-width: 65ch; margin-inline: auto; }
+
+  /* ---------- masthead ---------- */
+  header.masthead { padding: 64px 0 40px; }
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 22px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800; font-size: clamp(38px, 6.4vw, 68px); line-height: 1.02;
+    letter-spacing: -.022em; margin: 0 0 24px; text-wrap: balance;
+  }
+  .standfirst {
+    font-size: clamp(19px, 2.3vw, 23px); line-height: 1.5; color: var(--muted);
+    margin: 0 0 32px; text-wrap: pretty;
+  }
+  .meta {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--faint); border-top: 1px solid var(--rule);
+    padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px;
+  }
+
+  /* ---------- bit strip: 64 cells, filled = share of memory still used ---------- */
+  .bitstrip { margin: 40px auto 8px; max-width: 65ch; }
+  .bitstrip-cells { display: grid; grid-template-columns: repeat(64, 1fr); gap: 2px; }
+  .bit { aspect-ratio: 1; border-radius: 1px; background: var(--old-soft); }
+  .bit.on { background: var(--accent); }
+  .bitstrip-legend {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+    color: var(--faint); margin-top: 10px; display: flex; justify-content: space-between; gap: 16px;
+  }
+
+  /* ---------- headline figures ---------- */
+  .figures {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+    border-radius: 3px; overflow: hidden; margin: 48px 0 8px;
+  }
+  @media (max-width: 860px) { .figures { grid-template-columns: repeat(2, 1fr); } }
+  .fig { background: var(--surface); padding: 22px 20px 20px; }
+  .fig-value {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700;
+    font-size: 36px; letter-spacing: -.03em; line-height: 1; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .fig-label {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 12px; line-height: 1.5;
+  }
+  .figures-note {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+    color: var(--faint); margin: 0 0 56px;
+  }
+
+  /* ---------- prose ---------- */
+  h2 {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700;
+    font-size: clamp(26px, 3.4vw, 33px); letter-spacing: -.018em; line-height: 1.15;
+    margin: 68px 0 20px; text-wrap: balance;
+  }
+  h3 {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700;
+    font-size: 20px; letter-spacing: -.008em; margin: 44px 0 12px; text-wrap: balance;
+  }
+  h3 .num {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px;
+    color: var(--accent); margin-right: 10px; font-weight: 600;
+  }
+  p { margin: 0 0 22px; }
+  .col > p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .84em;
+    background: var(--code-bg); padding: .14em .38em; border-radius: 3px;
+  }
+  .lede::first-letter {
+    float: left; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+    font-size: 62px; line-height: .84; padding: 4px 10px 0 0; color: var(--accent);
+  }
+  .rule { border: 0; border-top: 1px solid var(--rule); margin: 64px auto; max-width: 65ch; }
+
+  pre {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13.5px; line-height: 1.7;
+    background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+    border-radius: 3px; padding: 18px 20px; overflow-x: auto; margin: 0 0 24px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .cmt { color: var(--faint); }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; margin: 0 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  caption {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    text-align: left; padding-bottom: 12px;
+  }
+  th, td {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    padding: 9px 14px; text-align: right; white-space: nowrap;
+    font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--rule);
+  }
+  th { font-weight: 600; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.old { color: var(--old); }
+  td.new { color: var(--accent); font-weight: 600; }
+  tr.total td { border-top: 2px solid var(--rule); font-weight: 600; }
+  .table-note {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+    color: var(--faint); line-height: 1.65; margin: 0 0 40px;
+  }
+
+  /* ---------- proportion chart ---------- */
+  .prop { display: grid; gap: 12px; margin: 0 0 14px; }
+  .prop-row { display: grid; grid-template-columns: 82px 1fr 128px; gap: 14px; align-items: center; }
+  .prop-label, .prop-value {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12.5px;
+    font-variant-numeric: tabular-nums; color: var(--muted);
+  }
+  .prop-value { text-align: right; }
+  .prop-value b { color: var(--accent); font-weight: 600; }
+  .prop-track { background: var(--old-soft); border-radius: 2px; height: 22px; position: relative; }
+  .prop-fill { background: var(--accent); border-radius: 2px; height: 100%; }
+  .prop-head { display: grid; grid-template-columns: 82px 1fr 128px; gap: 14px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .prop-head span:last-child { text-align: right; }
+
+  /* ---------- callout ---------- */
+  .callout {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 26px 28px; margin: 0 0 26px; box-shadow: var(--shadow);
+  }
+  .callout h3 { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  footer.end {
+    border-top: 1px solid var(--rule); margin-top: 72px; padding-top: 22px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px;
+    color: var(--faint); line-height: 1.8;
+  }
+  @media (max-width: 640px) {
+    body { font-size: 18px; }
+    .prop-row, .prop-head { grid-template-columns: 62px 1fr 104px; }
+    .bitstrip-cells { gap: 1px; }
+  }
+</style>
+<style>
+  @page {
+    size: A4;
+    margin: 17mm 15mm 16mm;
+  }
+  @media print {
+    html, body {
+      background: #FFFFFF !important;
+      font-size: 10.2pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .wrap { max-width: none; padding: 0 0 8mm; }
+    .col { max-width: none; }
+
+    header.masthead { padding: 0 0 8mm; }
+    h1 { font-size: 30pt; }
+    .standfirst { font-size: 12.5pt; }
+    .meta { font-size: 8pt; }
+
+    h2 { font-size: 16.5pt; margin: 9mm 0 3mm; break-after: avoid; }
+    h3 { font-size: 12pt; margin: 6mm 0 2mm; break-after: avoid; }
+    p { margin: 0 0 3.2mm; orphans: 3; widows: 3; }
+    .lede::first-letter { font-size: 34pt; }
+
+    /* Nothing that reads as one object may be split across a page. */
+    .figures, .callout, .table-wrap, pre, .prop, .bitstrip, .prop-row { break-inside: avoid; }
+    table { font-size: 8.6pt; }
+    th, td { padding: 5px 9px; }
+    caption { font-size: 7.6pt; padding-bottom: 6px; }
+    .table-note, .figures-note { font-size: 8pt; margin-bottom: 6mm; }
+    pre { font-size: 8.6pt; padding: 10px 12px; }
+    .fig-value { font-size: 24pt; }
+    .fig-label { font-size: 7.6pt; margin-top: 7px; }
+    .fig { padding: 12px 12px 11px; }
+    .rule { margin: 9mm auto; }
+    .prop-head, .prop-label, .prop-value { font-size: 8.4pt; }
+    .prop-row, .prop-head { grid-template-columns: 68px 1fr 150px; }
+    .prop-track { height: 16px; }
+    .bitstrip-legend { font-size: 7.6pt; }
+    footer.end { font-size: 8pt; margin-top: 8mm; break-inside: avoid; }
+
+    /* The headline figure band and the two long tables each start a fresh page rather than
+       stranding two rows at the foot of one. */
+    .page-break-before { break-before: page; }
+  }
+</style>
+</head>
+<body>
+<style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}</style>
+
+
+<div class="wrap">
+
+  <header class="masthead col">
+    <p class="eyebrow">Engineering note · .NET</p>
+    <h1>DataTable is 25 years old. Nobody ever reimagined it.</h1>
+    <p class="standfirst">It shipped with .NET Framework 1.0 in 2002 and still sits between an enormous number of business applications and their databases. It has been maintained for a quarter of a century. It has never been rebuilt.</p>
+    <div class="meta">
+      <span>Benchmarks: .NET 10</span><span>x64, workstation GC</span><span>Reproducible: <code>dotnet run -c Release -- article</code></span>
+    </div>
+  </header>
+
+  <div class="bitstrip">
+    <div class="bitstrip-cells" id="bitstrip"></div>
+    <div class="bitstrip-legend">
+      <span>64 cells &middot; filled = memory the columnar table still needs</span>
+      <span>19 / 64</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="figures">
+      <div class="fig"><div class="fig-value">70%</div><div class="fig-label">Less memory<br>1M rows, 10 columns</div></div>
+      <div class="fig"><div class="fig-value">2.9&times;</div><div class="fig-label">Faster load<br>like-for-like, 66 cols</div></div>
+      <div class="fig"><div class="fig-value">5&times;</div><div class="fig-label">Less garbage<br>sending a TVP</div></div>
+      <div class="fig"><div class="fig-value">18.6&times;</div><div class="fig-label">Faster delete<br>10% of 200k rows</div></div>
+    </div>
+    <p class="figures-note">Every figure below is measured, not modelled. Sources and caveats are stated inline.</p>
+
+    <p class="lede">The awkward part is where it sits. <code>System.Data.DataTable</code> is rarely at the edge of a system &mdash; it is in the middle: the currency you load a query into, pass around, cache, and hand back to SQL Server as a table-valued parameter. If a table sits in memory for the life of a request, or worse for the life of a cache entry, its shape decides your memory ceiling, your GC pressure, and a surprising slice of your latency.</p>
+
+    <p>A data structure in that position is worth rebuilding from the ground up rather than tuning around. So I rebuilt it: column-oriented, strongly typed, allocation-lean. Here is what fell out.</p>
+
+    <h2>First, the thing that makes the old design expensive</h2>
+
+    <p><code>DataTable</code> is <strong>row-oriented</strong>. Each row is a heap object holding an <code>object[]</code> of its cells. Every value-typed cell &mdash; every <code>int</code>, <code>bool</code>, <code>DateTime</code>, <code>decimal</code> &mdash; gets <strong>boxed</strong>: wrapped in a heap object so it can live in an <code>object[]</code>.</p>
+
+    <p>A box is not free, and the price is paid per cell. On x64, boxing an <code>int</code> costs <strong>24 bytes</strong> &mdash; an 8-byte object header, an 8-byte method-table pointer, and 4 bytes of payload rounded up to 8. Add the 8-byte array slot pointing at it and one 4-byte integer occupies <strong>32 bytes</strong>.</p>
+  </div>
+
+  <div class="col">
+    <div class="table-wrap">
+      <table>
+        <caption>1,000,000 Int32 cells written, then read back</caption>
+        <thead><tr><th>Storage</th><th>Memory</th><th>Time</th><th>Bytes / cell</th></tr></thead>
+        <tbody>
+          <tr><td>Boxed <code>object[]</code></td><td class="old">30.5 MB</td><td class="old">11,539 &micro;s</td><td class="old">32.0</td></tr>
+          <tr><td>Typed <code>Int32[]</code></td><td class="new">3.8 MB</td><td class="new">462 &micro;s</td><td class="new">4.0</td></tr>
+          <tr class="total"><td>Difference</td><td>8&times; memory</td><td>25&times; time</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Same million integers. Eight times the memory, twenty-five times the time.</p>
+
+    <p>Now multiply by <em>cells</em>, not rows. A 1,000,000-row table with 10 value-typed columns performs <strong>ten million</strong> boxing operations to fill and ten million unboxing operations to read. That is not a micro-optimisation you are leaving on the table. That <em>is</em> the table.</p>
+
+    <h2>The idea: turn the table ninety degrees</h2>
+
+    <p>Instead of storing a table as rows of <code>object</code>, store it as <strong>columns of <code>T</code></strong>.</p>
+
+    <p>A column of a million <code>int</code>s becomes an <code>Int32[]</code>, chunked to stay off the large object heap. A column of a million <code>bool</code>s becomes a bitmap. Nothing is boxed, because nothing ever needs to be an <code>object</code>. And a row stops being an object at all &mdash; it becomes a lightweight view synthesized on demand from a table reference and an index.</p>
+
+    <p>Six things follow from that, and each is worth stating on its own.</p>
+
+    <h3><span class="num">01</span>Column-oriented, strongly typed storage</h3>
+    <p>Each column owns a typed array of exactly the right width. An <code>Int16</code> column costs 2 bytes per row, not 24 plus a pointer. There is no per-row object and no <code>object[]</code> per row, so the fixed overhead a row-oriented table pays <em>before storing any data</em> simply is not there.</p>
+
+    <h3><span class="num">02</span>A Boolean costs one bit</h3>
+    <p>Booleans are bit-packed, 64 rows to a <code>UInt64</code>. A million-row <code>bool</code> column is 125 KB of bits rather than a million boxed objects. Null tracking uses the same trick &mdash; one bit per row, set only when the cell <em>is</em> null, so a nullable column that never actually receives a null never allocates a single word for it.</p>
+
+    <h3><span class="num">03</span>Strongly typed methods, so nothing boxes on the hot path</h3>
+    <p>Resolve the column handle once, outside your loop, then read and write through it:</p>
+    <pre><code>DataColumn&lt;int&gt; quantity = table.Columns.GetColumn&lt;int&gt;("Quantity");
+long total = 0;
+for (int i = 0; i &lt; table.Rows.Count; i++)
+{
+    total += quantity.Get(i);   <span class="cmt">// array index. no cast, no box, no type check.</span>
+}</code></pre>
+    <p>That is an array index and a bit test. The <code>object</code> indexer is still there for compatibility &mdash; it just is not where you put a loop over a million rows.</p>
+
+    <h3><span class="num">04</span>Deletion is a tombstone, not a shift</h3>
+    <p><code>System.Data</code> removes a row by physically removing it from an index, which means shifting everything after it. Delete a tenth of a large table and you pay for that repeatedly. Here a deleted row is <strong>tombstoned</strong>: a bit flips, the visible row count drops, and a Fenwick tree translates logical positions to physical ones in O(log n). Nothing moves, nothing is copied, and every row handle you were already holding stays valid.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Delete every 10th row of 200,000, then read the survivors</caption>
+        <thead><tr><th>Implementation</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr><td><code>System.Data.DataTable</code></td><td class="old">165.3 ms</td></tr>
+          <tr><td>ColumnStore.Data</td><td class="new">8.9 ms</td></tr>
+          <tr class="total"><td>&nbsp;</td><td>18.6&times; faster</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">&nbsp;</p>
+
+    <h3><span class="num">05</span>Loading is faster, because the loader is typed too</h3>
+    <p>Loading from an <code>IDataReader</code> is where most tables get filled, so the type decision happens <strong>once per column at schema time</strong>, not once per cell. The loader builds one pre-bound delegate per field that has already captured the ordinal, the cast column and the typed getter, so the per-row loop does nothing but invoke them. <code>reader.GetInt32(3)</code> goes straight into an <code>Int32[]</code>. Nothing boxes.</p>
+
+    <h3><span class="num">06</span>Table-valued parameters get faster for the same reason</h3>
+    <p>Sending rows to SQL Server via a TVP means producing a stream of <code>SqlDataRecord</code>s. From a <code>DataTable</code>, every cell you read is already boxed and stays boxed on the way into the record. From a typed column, the value goes from an array straight into <code>SetInt32</code>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Producing 200,000 SqlDataRecords</caption>
+        <thead><tr><th>Source</th><th>Time</th><th>&micro;s / row</th><th>Allocated</th><th>Bytes / row</th></tr></thead>
+        <tbody>
+          <tr><td><code>System.Data.DataTable</code></td><td class="old">35,012 &micro;s</td><td class="old">0.175</td><td class="old">40.4 MB</td><td class="old">212.0</td></tr>
+          <tr><td>ColumnStore.Data</td><td class="new">19,851 &micro;s</td><td class="new">0.099</td><td class="new">7.6 MB</td><td class="new">40.0</td></tr>
+          <tr class="total"><td>&nbsp;</td><td>1.8&times; faster</td><td>&mdash;</td><td>5&times; less</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">The allocation figure is the one to notice: 40 bytes per row instead of 212 is GC pressure your whole process stops paying, not just this loop.</p>
+  </div>
+
+  <hr class="rule">
+
+  <div class="col">
+    <h2>The numbers, across row counts and column types</h2>
+    <p>A mixed 10-column table &mdash; <code>int</code>, <code>string</code>, <code>bool</code>, <code>decimal</code>, <code>DateTime</code>, <code>long</code>, <code>Guid</code>, <code>short</code>, <code>double</code>, <code>bool</code> &mdash; populated identically both ways.</p>
+
+    <div class="prop-head"><span>Rows</span><span>Memory used, as a share of System.Data</span><span>Saved</span></div>
+    <div class="prop">
+      <div class="prop-row"><span class="prop-label">1,000</span><div class="prop-track"><div class="prop-fill" style="width:30.3%"></div></div><span class="prop-value">0.2 &rarr; 0.1 MB &nbsp;<b>70%</b></span></div>
+      <div class="prop-row"><span class="prop-label">10,000</span><div class="prop-track"><div class="prop-fill" style="width:25.6%"></div></div><span class="prop-value">2.8 &rarr; 0.7 MB &nbsp;<b>74%</b></span></div>
+      <div class="prop-row"><span class="prop-label">100,000</span><div class="prop-track"><div class="prop-fill" style="width:27.6%"></div></div><span class="prop-value">25.2 &rarr; 7.0 MB &nbsp;<b>72%</b></span></div>
+      <div class="prop-row"><span class="prop-label">1,000,000</span><div class="prop-track"><div class="prop-fill" style="width:29.6%"></div></div><span class="prop-value">233.5 &rarr; 69.2 MB &nbsp;<b>70%</b></span></div>
+    </div>
+    <p class="table-note">234 MB down to 69 MB. The saving holds at around 70% from a thousand rows to a million &mdash; it is structural, not a trick that only pays at scale.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Build time, same table</caption>
+        <thead><tr><th>Rows</th><th>System.Data</th><th>ColumnStore</th><th>Faster</th></tr></thead>
+        <tbody>
+          <tr><td>1,000</td><td class="old">0.3 ms</td><td class="new">0.0 ms</td><td>9.6&times;</td></tr>
+          <tr><td>10,000</td><td class="old">4.9 ms</td><td class="new">0.3 ms</td><td>15.1&times;</td></tr>
+          <tr><td>100,000</td><td class="old">53.6 ms</td><td class="new">3.4 ms</td><td>15.6&times;</td></tr>
+          <tr><td>1,000,000</td><td class="old">1,001.7 ms</td><td class="new">46.4 ms</td><td>21.6&times;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Two honest notes. The ColumnStore arm uses the typed <code>Set</code> path and the System.Data arm uses <code>Rows.Add(object[])</code>, because that is how each is idiomatically populated &mdash; so 21.6&times; is best-idiomatic against best-idiomatic, not the same code twice. When both are loaded from the <em>same</em> <code>IDataReader</code> through their respective loaders, the like-for-like figure is a more sober <b>2.9&times; faster and 51% less memory</b> on a 66-column production schema at 50,000 rows.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>One column of 1,000,000 rows, by type &mdash; retained bytes per row</caption>
+        <thead><tr><th>Type</th><th>System.Data</th><th>ColumnStore</th><th>Ratio</th></tr></thead>
+        <tbody>
+          <tr><td>Boolean</td><td class="old">145.8</td><td class="new">0.4</td><td>370&times;</td></tr>
+          <tr><td>Byte</td><td class="old">145.8</td><td class="new">1.5</td><td>96&times;</td></tr>
+          <tr><td>Int16</td><td class="old">146.9</td><td class="new">2.5</td><td>58&times;</td></tr>
+          <tr><td>Int32</td><td class="old">149.0</td><td class="new">4.5</td><td>33&times;</td></tr>
+          <tr><td>Int64 / Double / DateTime</td><td class="old">153.2</td><td class="new">8.5</td><td>18&times;</td></tr>
+          <tr><td>Decimal</td><td class="old">161.6</td><td class="new">16.5</td><td>10&times;</td></tr>
+          <tr><td>Guid</td><td class="old">185.0</td><td class="new">16.5</td><td>11&times;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Read this one carefully: it is a <em>single-column</em> table, so the System.Data side is dominated by the fixed per-row cost &mdash; the row object and its <code>object[]</code> &mdash; which is exactly the overhead that disappears. That is why every type looks alike on the left and tracks its true width on the right. Boolean at 0.4 bytes is the one bit plus chunk bookkeeping.</p>
+  </div>
+
+  <hr class="rule">
+
+  <div class="col">
+    <h2>What you actually have to change</h2>
+    <p>The API is shaped to match <code>System.Data</code>. <code>Columns.Add("Id", typeof(int))</code>, <code>Rows.Add(1, "widget")</code>, <code>row["Name"]</code>, <code>foreach (DataRow row in table.Rows)</code>, <code>Clone</code>, <code>Copy</code>, <code>ImportRow</code>, <code>Select()</code>, <code>row.Delete()</code> &mdash; all present, all behaving the same way, down to details that ported code silently depends on: a null cell reads back as <code>DBNull.Value</code>, <code>Columns["missing"]</code> returns <code>null</code>, <code>Columns[99]</code> throws <code>IndexOutOfRangeException</code>.</p>
+
+    <p>Change the <code>using</code>. That is the port. Every shape System.Data code assigns a cell in compiles and writes:</p>
+
+    <pre><code>table.Rows[0]["Name"] = "changed";
+table.Rows[0].ItemArray = values;
+table.Rows[0]["A"] = table.Rows[1]["A"];
+foreach (DataRow row in table.Rows) { row["Name"] = "changed"; }
+DataRow row = table.Rows[0]; row["Name"] = "changed";
+table.Select()[0]["Name"] = "changed";</code></pre>
+
+    <p>That took one deliberate piece of design, and one measurement that overruled the obvious implementation.</p>
+
+    <div class="callout">
+      <h3>Why a row indexer has to return a reference</h3>
+      <p><code>DataRow</code> is a readonly struct &mdash; that is where the memory saving lives &mdash; and C# only allows assignment through a property whose receiver is a <em>variable</em>. A by-value struct return is not one: the write would land in a temporary and be discarded, so the compiler refuses it. So <code>Rows[i]</code> returns <code>ref DataRow</code>, and the receiver becomes a variable again.</p>
+      <p>A reference needs somewhere real to point, and the cheap choice &mdash; one scratch slot reused by every call &mdash; is <strong>wrong in a way nothing reports</strong>. In <code>rows[0]["Name"] = rows[1]["Name"]</code> the compiler takes the target's address first, then evaluates the right-hand side, which overwrites that same slot with row 1. The write lands in <em>row 1</em>; row 0 is left untouched and nothing throws. I reproduced that before choosing the design, and there is now a test whose only job is to fail if anyone optimises back to it.</p>
+      <p>So each row gets its own view slot, chunked at 1,024 rows &mdash; small enough to stay off the large object heap, and never reallocated, so a reference taken earlier stays valid however many rows are appended after it.</p>
+    </div>
+
+    <p>The store is built lazily on the first <code>Rows[i]</code> call and released by <code>Clear</code>, and the library's own internals never touch it. So the cost is real, bounded, and paid only by tables that actually index a row:</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>1,000,000 rows &times; 10 columns &mdash; what the row-view store costs</caption>
+        <thead><tr><th>Access pattern</th><th>Retained</th><th>vs System.Data</th></tr></thead>
+        <tbody>
+          <tr><td>foreach and typed handles only</td><td class="new">69.2 MB</td><td class="new">70.4% saved</td></tr>
+          <tr><td>Row indexer used on every row</td><td class="new">84.5 MB</td><td class="new">63.8% saved</td></tr>
+          <tr class="total"><td>Cost of the views</td><td>16.0 bytes/row</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Write your hot loops against a typed column handle and you pay nothing for compatibility you are not using. Write them the way your existing code already does, and you still keep two thirds of the saving.</p>
+
+    <h2>And what is deliberately out of scope</h2>
+    <p>Being honest about this is the point, not a disclaimer. There is no expression engine, no constraint engine, no relations, no change tracking, no XML. So <code>Select("Id &gt; 5")</code>, <code>Compute</code>, <code>DefaultView</code>, <code>PrimaryKey</code>, <code>Constraints</code>, <code>Relations</code>, <code>Merge</code>, <code>GetChanges</code>, <code>RejectChanges</code> and <code>ReadXml</code> all throw <code>NotImplementedException</code> &mdash; <strong>with a message naming the alternative</strong>.</p>
+
+    <p>They throw rather than quietly doing nothing on purpose. A <code>Select(filter)</code> that returned every row, or a <code>Merge</code> that appended instead of matching, would hand back <em>wrong answers</em>; throwing hands back a stack trace pointing at the line to change. Table events refuse at subscription time for the same reason: firing them would cost per row, and never firing them would leave your handler silently dead.</p>
+
+    <p>A few members are no-ops, and that is exact rather than lazy &mdash; <code>AcceptChanges</code> has nothing to commit when writes go straight into column storage, and <code>BeginLoadData</code> has no indexes to suspend.</p>
+
+    <h2>The takeaway</h2>
+    <p>A quarter of a century is a long time for a data structure to sit in the middle of everything without anyone asking whether its shape is still the right one. Row-oriented storage with boxed cells made sense in 2002, when the alternative was worse. It does not make sense now.</p>
+
+    <p>Turn it ninety degrees and the numbers move by multiples, not percentages: <strong>~70% less memory</strong>, <strong>2.9&times; faster to load</strong> like-for-like, <strong>1.8&times; faster</strong> to send as a TVP with <strong>5&times; less garbage</strong>, <strong>18.6&times; faster</strong> to delete from. Change a <code>using</code> and all of that arrives without touching your logic. Resolve a typed column handle in your hot loops and you keep the last of it too.</p>
+
+    <footer class="end">
+      Every figure in this article comes from benchmarks in the repository and can be reproduced with
+      <code>dotnet run -c Release -- article</code>.<br>
+      Measured on .NET 10, workstation GC, x64. Memory is retained bytes after a forced gen-2 collection, not working set.
+    </footer>
+  </div>
+</div>
+
+<script>
+  // 64 cells; the filled ones are the share of System.Data's memory the columnar table still needs
+  // at 1,000,000 rows (69.2 MB of 233.5 MB = 29.6% -> 19 cells). Content, not decoration.
+  (function () {
+    var strip = document.getElementById("bitstrip");
+    if (!strip) { return; }
+    var FILLED = 19;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < 64; i++) {
+      var cell = document.createElement("div");
+      cell.className = i < FILLED ? "bit on" : "bit";
+      frag.appendChild(cell);
+    }
+    strip.appendChild(frag);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- The suite runs on every framework the library ships for. net48 is not decoration: the storage layer's bit
+         operations have a separate software implementation there, and only running the tests proves it agrees. -->
+    <TargetFrameworks>net48;net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>ColumnStore.Data.Tests</RootNamespace>
+    <AssemblyName>ColumnStore.Data.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Optimised code is what ships, and the allocation-delta tests assert on what optimised code does. -->
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <!-- Let the net8.0 test assembly run on a newer runtime when no .NET 8 runtime is installed. This affects the
+         TEST HOST only - the shipped library still targets net8.0 properly - and means the net8.0 compilation is
+         actually executed rather than merely built on machines that have moved on. -->
+    <RollForward>LatestMajor</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ColumnStore.Data\ColumnStore.Data.csproj" />
+    <ProjectReference Include="..\..\src\ColumnStore.Data.SqlServer\ColumnStore.Data.SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>

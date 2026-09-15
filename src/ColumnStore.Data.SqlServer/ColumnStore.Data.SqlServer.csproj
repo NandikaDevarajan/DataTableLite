@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>ColumnStore.Data.SqlServer</RootNamespace>
+    <AssemblyName>ColumnStore.Data.SqlServer</AssemblyName>
+    <Description>SQL Server write adapters for ColumnStore.Data: table-valued parameters and SqlBulkCopy, without boxing a cell.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>ColumnStore.Data.SqlServer</PackageId>
+    <IsPackable>true</IsPackable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>sqlserver;tvp;table-valued-parameter;sqlbulkcopy;datatable;columnar;performance;ado.net</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Microsoft.Data.SqlClient targets net462, so the same package reference serves .NET Framework 4.8 and .NET 8/10
+       alike, and Microsoft.Data.SqlClient.Server.SqlDataRecord exists on all three. No conditional compilation is
+       needed anywhere in this assembly. (The legacy Microsoft.SqlServer.Server namespace would NOT work on net48 -
+       Microsoft.Data.SqlClient type-forwards it to an assembly the .NET Framework reference assemblies do not
+       carry - which is why this code uses Microsoft.Data.SqlClient.Server throughout.) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Data" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ColumnStore.Data\ColumnStore.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ColumnStore.Data.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="readme.txt" />
+  </ItemGroup>
+
+</Project>

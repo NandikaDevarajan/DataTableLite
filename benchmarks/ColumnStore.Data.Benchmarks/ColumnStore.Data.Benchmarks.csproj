@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ColumnStore.Data.Benchmarks</RootNamespace>
+    <AssemblyName>ColumnStore.Data.Benchmarks</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <!-- Retained-memory measurement is meaningless against unoptimised code, and the workstation GC's behaviour is
+         what a typical consuming application sees. Both are pinned here so a run is comparable to an earlier one. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ColumnStore.Data\ColumnStore.Data.csproj" />
+    <!-- Needed only by LoadBenchmark, which compares DataTableLoader against System.Data.DataTable.Load. -->
+    <ProjectReference Include="..\..\src\ColumnStore.Data.SqlServer\ColumnStore.Data.SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>
