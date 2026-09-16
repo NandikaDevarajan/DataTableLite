@@ -367,9 +367,6 @@ The suite covers each layer bottom-up and includes:
 
 ## Documentation
 
-- **[Reimagining the DataTable](docs/Article.md)** — the long-form write-up, with every benchmark and
-  the reasoning behind each design decision. Also available as
-  [PDF](docs/Reimagining-DataTable.pdf).
 - **[`Spec/`](Spec)** — requirements, architecture, detailed design, coding standards, and
   [`05_DesignDecisions.md`](Spec/05_DesignDecisions.md): every deviation from the spec, measured and
   argued.
