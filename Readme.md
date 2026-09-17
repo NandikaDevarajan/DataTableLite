@@ -380,4 +380,3 @@ tracking, constraints and keys, relations, an expression engine, XML serializati
 compaction of tombstoned slots. Each throws `NotImplementedException` naming an alternative rather
 than failing quietly.
 
-Column removal and `DataSet` were out of scope for v1 and are now implemented.

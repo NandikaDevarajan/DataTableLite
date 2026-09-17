@@ -11,7 +11,6 @@
     <PackageId>ColumnStore.Data</PackageId>
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>datatable;columnar;column-store;performance;memory;ado.net;in-memory;boxing;system.data</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

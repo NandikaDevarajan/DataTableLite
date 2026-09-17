@@ -11,7 +11,7 @@
     <PackageId>ColumnStore.Data.SqlServer</PackageId>
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>sqlserver;tvp;table-valued-parameter;sqlbulkcopy;datatable;columnar;performance;ado.net</PackageTags>
+    <PackageTags>$(PackageTags);SqlServer;TVP;TableValuedParameter;SqlBulkCopy;ADO.NET</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
